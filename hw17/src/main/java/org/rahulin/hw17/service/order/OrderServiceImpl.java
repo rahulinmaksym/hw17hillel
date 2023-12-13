@@ -2,6 +2,9 @@ package org.rahulin.hw17.service.order;
 
 import lombok.RequiredArgsConstructor;
 import org.rahulin.hw17.dto.OrderDTO;
+import org.rahulin.hw17.dto.ProductDTO;
+import org.rahulin.hw17.repository.jdbc.OrderJDBCRepository;
+import org.rahulin.hw17.service.product.ProductService;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -13,55 +16,48 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
-    List<OrderDTO> orders = new ArrayList<>();
+    private final OrderJDBCRepository orderJDBCRepository;
+    private final ProductService productService;
 
     @Override
     public OrderDTO getById(Long id) {
-        return orders.stream()
-                .filter(orderFromList -> Objects.equals(orderFromList.getId(), id))
-                .collect(Collectors.toList())
-                .get(0);
+        return orderJDBCRepository.getById(id);
     }
 
     @Override
-    public List<OrderDTO> getAllOrders() {
-        return orders;
+    public List<OrderDTO> getAll() {
+        return orderJDBCRepository.getAll();
     }
 
     @Override
-    public void addOrder(OrderDTO order) {
-        if(orders.stream()
-                .filter(orderFromList -> Objects.equals(orderFromList.getId(), order.getId()))
-                .collect(Collectors.toList())
-                .isEmpty()) {
-            orders.add(order);
-        }
-        else {
-            updateOrderById(order.getId(), order);
-        }
+    public void add(OrderDTO order) {
+        orderJDBCRepository.add(order);
     }
 
     @Override
-    public void updateOrderById(Long id, OrderDTO order) {
-        for (OrderDTO orderFromList : orders) {
-            if(Objects.equals(orderFromList.getId(), id)) {
-                orderFromList.setId(order.getId());
-                orderFromList.setDate(order.getDate());
-                orderFromList.setCost(order.getCost());
-                orderFromList.setProducts(order.getProducts());
-            }
-        }
+    public void updateById(Long id, OrderDTO order) {
+        orderJDBCRepository.updateById(id, order);
     }
 
     @Override
-    public void deleteOrderById(Long id) {
-        int iterations = 0;
-        for (OrderDTO orderFromList : orders) {
-            if(Objects.equals(orderFromList.getId(), id)) {
-                break;
-            }
-            iterations++;
+    public void deleteById(Long id) {
+        List<ProductDTO> productsOfOrder = productService.getByOrderId(id);
+        for (ProductDTO product : productsOfOrder) {
+            productService.deleteById(product.getId());
         }
-        orders.remove(iterations);
+        orderJDBCRepository.delete(id);
     }
+
+    @Override
+    public void refreshCostById(Long id) {
+        OrderDTO order = getById(id);
+        List<ProductDTO> productsOfOrder = productService.getByOrderId(order.getId());
+        float refreshedCost = 0;
+        for (ProductDTO product : productsOfOrder) {
+            refreshedCost += product.getCost();
+        }
+        order.setCost(refreshedCost);
+        updateById(id, order);
+    }
+
 }
