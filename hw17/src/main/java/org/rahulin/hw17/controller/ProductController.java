@@ -3,62 +3,78 @@ package org.rahulin.hw17.controller;
 import lombok.RequiredArgsConstructor;
 import org.rahulin.hw17.dto.ProductDTO;
 import org.rahulin.hw17.service.product.ProductService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("products")
+@RequestMapping("/api/v1/products")
 public class ProductController {
 
     private final ProductService productService;
 
-    @GetMapping("/id=1")
-    public ProductDTO getWithId1() {
-        return productService.getById(1L);
+    @GetMapping("/{productId}")
+    public ResponseEntity<ProductDTO> getById(@PathVariable("productId") Long productId) {
+        ProductDTO product = productService.getById(productId);
+        if(product != null) {
+            return ResponseEntity.ok(product);
+        }
+        return (ResponseEntity<ProductDTO>) ResponseEntity.notFound();
     }
 
-    @GetMapping("/getAll")
-    public List<ProductDTO> getAll() {
-        return productService.getAll();
+//    Власне, проба на ApiResponse
+//    @GetMapping("/{productId}")
+//    public ApiResponse<ProductDTO> getById(@PathVariable("productId") Long productId) {
+//        ApiResponse<ProductDTO> response = new ApiResponse<>();
+//        ProductDTO product = productService.getById(productId);
+//        if(product != null) {
+//            response.setSuccess(true);
+//            response.setData(product);
+//        }
+//        return response;
+//    }
+
+    @CrossOrigin("*")
+    @GetMapping()
+    public ResponseEntity<List<ProductDTO>> getAll() {
+        List<ProductDTO> products = productService.getAll();
+        if(!CollectionUtils.isEmpty(products)) {
+            return ResponseEntity.ok(products);
+        }
+        return (ResponseEntity<List<ProductDTO>>) ResponseEntity.notFound();
     }
 
-    @GetMapping("/addTelephoneToOrder3")
-    public void addWithCurrentDate() {
-        ProductDTO product = new ProductDTO();
-        product.setName("telephone");
-        product.setCost(1111F);
-        product.setOrderId(3L);
+    @CrossOrigin("*")
+    @GetMapping("/getFromOrder/{orderId}")
+    public ResponseEntity<List<ProductDTO>> getByOrderId(@PathVariable("orderId") Long orderId) {
+        List<ProductDTO> products = productService.getByOrderId(orderId);
+        if(!CollectionUtils.isEmpty(products)) {
+            return ResponseEntity.ok(products);
+        }
+        return (ResponseEntity<List<ProductDTO>>) ResponseEntity.notFound();
+    }
+
+    @CrossOrigin("*")
+    @PostMapping()
+    @ResponseStatus(HttpStatus.CREATED)
+    public void add(@RequestBody ProductDTO product) {
         productService.add(product);
     }
 
-    @GetMapping("/updateNameWhereId=1")
-    public void updateNameWhereId1() {
-        ProductDTO product = productService.getById(1L);
-        product.setName("meow ULTIMA");
-        productService.updateById(1L, product);
+    @PutMapping("/{productId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateById(@PathVariable("productId") Long productId,
+                           @RequestBody ProductDTO product) {
+        productService.updateById(productId, product);
     }
 
-    @GetMapping("/deleteWhereId=2")
-    public void deleteWhereId2() {
-        productService.deleteById(2L);
+    @DeleteMapping("/{productId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteById(@PathVariable("productId") Long productId) {
+        productService.deleteById(productId);
     }
 
-    @GetMapping("/getProductsOfOrder1")
-    public List<ProductDTO> getProductsOfOrder1() {
-        return productService.getByOrderId(1L);
-    }
-
-    @GetMapping("/getProductsOfOrder2")
-    public List<ProductDTO> getProductsOfOrder2() {
-        return productService.getByOrderId(2L);
-    }
-
-    @GetMapping("/getProductsOfOrder3")
-    public List<ProductDTO> getProductsOfOrder3() {
-        return productService.getByOrderId(3L);
-    }
 }

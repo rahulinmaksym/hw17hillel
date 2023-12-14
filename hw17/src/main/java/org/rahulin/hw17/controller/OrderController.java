@@ -2,52 +2,64 @@ package org.rahulin.hw17.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.rahulin.hw17.dto.OrderDTO;
+import org.rahulin.hw17.dto.ProductDTO;
 import org.rahulin.hw17.service.order.OrderService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("orders")
+@RequestMapping("/api/v1/orders")
 public class OrderController {
 
     private final OrderService orderService;
 
-    @GetMapping("/id=1")
-    public OrderDTO getWithId1() {
-        return orderService.getById(1L);
+    @GetMapping("/{orderId}")
+    public ResponseEntity<OrderDTO> getOrderById(@PathVariable("orderId") Long orderId) {
+        OrderDTO order = orderService.getById(orderId);
+        if(order != null) {
+            return ResponseEntity.ok(order);
+        }
+        return (ResponseEntity<OrderDTO>) ResponseEntity.notFound();
     }
 
-    @GetMapping("/getAll")
-    public List<OrderDTO> getAll() {
-        return orderService.getAll();
+    @CrossOrigin("*")
+    @GetMapping()
+    public ResponseEntity<List<OrderDTO>> getAll() {
+        List<OrderDTO> orders = orderService.getAll();
+        if(!CollectionUtils.isEmpty(orders)) {
+            return ResponseEntity.ok(orders);
+        }
+        return (ResponseEntity<List<OrderDTO>>) ResponseEntity.notFound();
     }
 
-    @GetMapping("/addWithCurrentDate")
-    public void addWithCurrentDate() {
-        OrderDTO order = new OrderDTO();
-        order.setDate("13.12.2023");
-        order.setCost(1F);
+    @CrossOrigin("*")
+    @PostMapping()
+    @ResponseStatus(HttpStatus.CREATED)
+    public void add(@RequestBody OrderDTO order) {
         orderService.add(order);
     }
 
-    @GetMapping("/changeDateToPreviousYearWhereId=2")
-    public void changeDateToPreviousYearWhereId2() {
-        OrderDTO order = orderService.getById(2L);
-        order.setDate("13.12.2022");
-        orderService.updateById(2L, order);
+    @PutMapping("/{orderId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateById(@PathVariable("orderId") Long orderId,
+                           @RequestBody OrderDTO order) {
+        orderService.updateById(orderId, order);
     }
 
-    @GetMapping("/deleteWhereId=1")
-    public void deleteWhereId1() {
-        orderService.deleteById(1L);
+    @PutMapping("/{orderId}/refreshCost")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void refreshCostById(@PathVariable("orderId") Long orderId) {
+        orderService.refreshCostById(orderId);
     }
 
-    @GetMapping("/refreshCostWhereId=3")
-    public void refreshCostWhereId3() {
-        orderService.refreshCostById(3L);
+    @DeleteMapping("/{orderId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteById(@PathVariable("orderId") Long orderId) {
+        orderService.deleteById(orderId);
     }
 
 }
