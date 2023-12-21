@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,7 +19,11 @@ public class ProductController {
 
     @GetMapping("/{productId}")
     public ResponseEntity<ProductDTO> getById(@PathVariable("productId") Long productId) {
-        ProductDTO product = productService.getById(productId);
+        Optional<ProductDTO> productOptional = productService.getById(productId);
+        ProductDTO product = null;
+        if(productOptional.isPresent()) {
+            product = productOptional.get();
+        }
         if(product != null) {
             return ResponseEntity.ok(product);
         }
@@ -64,11 +69,11 @@ public class ProductController {
         productService.add(product);
     }
 
-    @PutMapping("/{productId}")
+    @CrossOrigin("*")
+    @PutMapping()
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateById(@PathVariable("productId") Long productId,
-                           @RequestBody ProductDTO product) {
-        productService.updateById(productId, product);
+    public void update(@RequestBody ProductDTO product) {
+        productService.update(product);
     }
 
     @DeleteMapping("/{productId}")

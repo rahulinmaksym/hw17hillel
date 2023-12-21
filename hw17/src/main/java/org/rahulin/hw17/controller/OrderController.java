@@ -2,13 +2,13 @@ package org.rahulin.hw17.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.rahulin.hw17.dto.OrderDTO;
-import org.rahulin.hw17.dto.ProductDTO;
 import org.rahulin.hw17.service.order.OrderService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,7 +19,11 @@ public class OrderController {
 
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderDTO> getOrderById(@PathVariable("orderId") Long orderId) {
-        OrderDTO order = orderService.getById(orderId);
+        Optional<OrderDTO> orderOptional = orderService.getById(orderId);
+        OrderDTO order = null;
+        if(orderOptional.isPresent()) {
+            order = orderOptional.get();
+        }
         if(order != null) {
             return ResponseEntity.ok(order);
         }
@@ -43,11 +47,11 @@ public class OrderController {
         orderService.add(order);
     }
 
-    @PutMapping("/{orderId}")
+    @CrossOrigin("*")
+    @PutMapping()
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateById(@PathVariable("orderId") Long orderId,
-                           @RequestBody OrderDTO order) {
-        orderService.updateById(orderId, order);
+    public void update(@RequestBody OrderDTO order) {
+        orderService.update(order);
     }
 
     @PutMapping("/{orderId}/refreshCost")

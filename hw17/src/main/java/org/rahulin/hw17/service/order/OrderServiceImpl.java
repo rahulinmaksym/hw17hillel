@@ -3,40 +3,38 @@ package org.rahulin.hw17.service.order;
 import lombok.RequiredArgsConstructor;
 import org.rahulin.hw17.dto.OrderDTO;
 import org.rahulin.hw17.dto.ProductDTO;
-import org.rahulin.hw17.repository.jdbc.OrderJDBCRepository;
+import org.rahulin.hw17.repository.OrderRepository;
 import org.rahulin.hw17.service.product.ProductService;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
-    private final OrderJDBCRepository orderJDBCRepository;
+    private final OrderRepository orderRepository;
     private final ProductService productService;
 
     @Override
-    public OrderDTO getById(Long id) {
-        return orderJDBCRepository.getById(id);
+    public Optional<OrderDTO> getById(Long id) {
+        return orderRepository.findById(id);
     }
 
     @Override
     public List<OrderDTO> getAll() {
-        return orderJDBCRepository.getAll();
+        return (List<OrderDTO>) orderRepository.findAll();
     }
 
     @Override
     public void add(OrderDTO order) {
-        orderJDBCRepository.add(order);
+        orderRepository.save(order);
     }
 
     @Override
-    public void updateById(Long id, OrderDTO order) {
-        orderJDBCRepository.updateById(id, order);
+    public void update(OrderDTO order) {
+        orderRepository.save(order);
     }
 
     @Override
@@ -45,19 +43,22 @@ public class OrderServiceImpl implements OrderService {
         for (ProductDTO product : productsOfOrder) {
             productService.deleteById(product.getId());
         }
-        orderJDBCRepository.delete(id);
+        orderRepository.deleteById(id);
     }
 
     @Override
     public void refreshCostById(Long id) {
-        OrderDTO order = getById(id);
-        List<ProductDTO> productsOfOrder = productService.getByOrderId(order.getId());
-        float refreshedCost = 0;
-        for (ProductDTO product : productsOfOrder) {
-            refreshedCost += product.getCost();
+        Optional<OrderDTO> orderOptional = getById(id);
+        if(orderOptional.isPresent()) {
+            OrderDTO order = orderOptional.get();
+            List<ProductDTO> productsOfOrder = productService.getByOrderId(order.getId());
+            float refreshedCost = 0;
+            for (ProductDTO product : productsOfOrder) {
+                refreshedCost += product.getCost();
+            }
+            order.setCost(refreshedCost);
+            update(order);
         }
-        order.setCost(refreshedCost);
-        updateById(id, order);
     }
 
 }

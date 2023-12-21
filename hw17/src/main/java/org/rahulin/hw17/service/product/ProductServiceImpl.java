@@ -2,45 +2,46 @@ package org.rahulin.hw17.service.product;
 
 import lombok.RequiredArgsConstructor;
 import org.rahulin.hw17.dto.ProductDTO;
-import org.rahulin.hw17.repository.jdbc.ProductJDBCRepository;
+import org.rahulin.hw17.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
-    private final ProductJDBCRepository productJDBCRepository;
+    private final ProductRepository productRepository;
 
     @Override
-    public ProductDTO getById(Long id) {
-        return productJDBCRepository.getById(id);
+    public Optional<ProductDTO> getById(Long id) {
+        return productRepository.findById(id);
     }
 
     @Override
     public List<ProductDTO> getAll() {
-        return productJDBCRepository.getAll();
+        return (List<ProductDTO>) productRepository.findAll();
     }
 
     @Override
     public void add(ProductDTO product) {
-        productJDBCRepository.add(product);
+        productRepository.save(product);
     }
 
     @Override
-    public void updateById(Long id, ProductDTO product) {
-        productJDBCRepository.updateById(id, product);
+    public void update(ProductDTO product) {
+        productRepository.save(product);
     }
 
     @Override
     public void deleteById(Long id) {
-        productJDBCRepository.delete(id);
+        productRepository.deleteById(id);
     }
 
     @Override
     public List<ProductDTO> getByOrderId(Long orderId) {
-        return productJDBCRepository.getByOrderId(orderId);
+        return (List<ProductDTO>) productRepository.findByOrderId(orderId);
     }
 
 }
